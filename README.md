@@ -1,7 +1,7 @@
 # Vier Gewinnt - Miniprojekt
 
 ## Team
-- [Dein Name]
+- wagnekil, staeumic
 
 ## Funktionsübersicht
 Dieses Projekt implementiert das klassische Spiel "Vier Gewinnt" als Webanwendung unter Verwendung von React und der SJDON-Bibliothek.
