@@ -40,7 +40,7 @@
       for (let r = 3; r < ROWS; r++) {
         for (let c = 0; c < COLS - 3; c++) {
           if (board[r][c] && board[r][c] === board[r-1][c+1] && board[r][c] === board[r-2][c+2] && board[r][c] === board[r-3][c+3]) {
-            return board[r][c];
+            return board[r][c]
           }
         }
       }
@@ -48,108 +48,108 @@
       for (let r = 0; r < ROWS - 3; r++) {
         for (let c = 0; c < COLS - 3; c++) {
           if (board[r][c] && board[r][c] === board[r+1][c+1] && board[r][c] === board[r+2][c+2] && board[r][c] === board[r+3][c+3]) {
-            return board[r][c];
+            return board[r][c]
           }
         }
       }
-      return null;
+      return null
     }
 
     const App = sjdon(() => {
-      const [board, setBoard] = useState(Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
-      const [currentPlayer, setCurrentPlayer] = useState(PLAYER_1);
-      const [winner, setWinner] = useState(null);
-      const [history, setHistory] = useState([]);
+      const [board, setBoard] = useState(Array(ROWS).fill(null).map(() => Array(COLS).fill(null)))
+      const [currentPlayer, setCurrentPlayer] = useState(PLAYER_1)
+      const [winner, setWinner] = useState(null)
+      const [history, setHistory] = useState([])
 
       // Load state
       useEffect(() => {
-        const saved = localStorage.getItem('connectFour');
+        const saved = localStorage.getItem('connectFour')
         if (saved) {
           try {
-            const state = JSON.parse(saved);
-            setBoard(state.board);
-            setCurrentPlayer(state.currentPlayer);
-            setWinner(state.winner);
-            setHistory(state.history || []);
+            const state = JSON.parse(saved)
+            setBoard(state.board)
+            setCurrentPlayer(state.currentPlayer)
+            setWinner(state.winner)
+            setHistory(state.history || [])
           } catch (e) {
-            console.error("Failed to load state", e);
+            console.error("Failed to load state", e)
           }
         }
-      }, []);
+      }, [])
 
       // Save state
       useEffect(() => {
-        localStorage.setItem('connectFour', JSON.stringify({ board, currentPlayer, winner, history }));
-      }, [board, currentPlayer, winner, history]);
+        localStorage.setItem('connectFour', JSON.stringify({ board, currentPlayer, winner, history }))
+      }, [board, currentPlayer, winner, history])
 
       const handleDrop = (colIndex) => {
-        if (winner) return;
+        if (winner) return
 
         // Find the lowest empty row in the column
-        let rowIndex = -1;
+        let rowIndex = -1
         for (let r = ROWS - 1; r >= 0; r--) {
           if (!board[r][colIndex]) {
-            rowIndex = r;
-            break;
+            rowIndex = r
+            break
           }
         }
 
         if (rowIndex === -1) return; // Column full
 
-        const newBoard = board.map(row => [...row]);
-        newBoard[rowIndex][colIndex] = currentPlayer;
+        const newBoard = board.map(row => [...row])
+        newBoard[rowIndex][colIndex] = currentPlayer
 
         // Save history
-        setHistory([...history, { board, currentPlayer, winner }]);
+        setHistory([...history, { board, currentPlayer, winner }])
 
-        setBoard(newBoard);
+        setBoard(newBoard)
 
-        const win = checkWinner(newBoard);
+        const win = checkWinner(newBoard)
         if (win) {
-          setWinner(win);
+          setWinner(win)
         } else {
-          setCurrentPlayer(currentPlayer === PLAYER_1 ? PLAYER_2 : PLAYER_1);
+          setCurrentPlayer(currentPlayer === PLAYER_1 ? PLAYER_2 : PLAYER_1)
         }
-      };
+      }
 
       const handleUndo = () => {
-        if (history.length === 0) return;
-        const previous = history[history.length - 1];
-        setBoard(previous.board);
-        setCurrentPlayer(previous.currentPlayer);
-        setWinner(previous.winner);
-        setHistory(history.slice(0, -1));
-      };
+        if (history.length === 0) return
+        const previous = history[history.length - 1]
+        setBoard(previous.board)
+        setCurrentPlayer(previous.currentPlayer)
+        setWinner(previous.winner)
+        setHistory(history.slice(0, -1))
+      }
 
       const handleReset = () => {
-        setBoard(Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
-        setCurrentPlayer(PLAYER_1);
-        setWinner(null);
-        setHistory([]);
-        localStorage.removeItem('connectFour');
-      };
+        setBoard(Array(ROWS).fill(null).map(() => Array(COLS).fill(null)))
+        setCurrentPlayer(PLAYER_1)
+        setWinner(null)
+        setHistory([])
+        localStorage.removeItem('connectFour')
+      }
+
+      const makeCell = (cell, cIndex) => ["div", { className: `cell ${cell || ''}`, onClick: () => handleDrop(cIndex) }];
+      const cells = board.flatMap(row => row.map((cell, cIndex) => makeCell(cell, cIndex)))
+
+      const statusElement = ["div", { className: "status" },
+        winner ? `Gewinner: ${winner}!` : `Spieler am Zug: ${currentPlayer === 'Red' ? 'Rot' : 'Gelb'}`
+      ]
+
+      const boardElement = ["div", { className: "board" }, ...cells]
+
+      const controlsElement = ["div", { className: "controls" },
+        ["button", { onClick: handleUndo, disabled: history.length === 0 }, "Rückgängig"],
+        ["button", { onClick: handleReset }, "Neues Spiel"],
+        ["a", { href: "https://github.com/qisthecod/wbe-vier-gewinnt-/blob/main/README.md", target: "_blank", rel: "noopener noreferrer" }, "Dokumentation"]
+      ]
 
       return [
         "div",
         ["h1", "Vier Gewinnt"],
-        ["div", { className: "status" },
-          winner ? `Gewinner: ${winner}!` : `Spieler am Zug: ${currentPlayer === 'Red' ? 'Rot' : 'Gelb'}`
-        ],
-        ["div", { className: "board" },
-          ...board.flatMap((row, rIndex) =>
-            row.map((cell, cIndex) =>
-              ["div", {
-                className: `cell ${cell || ''}`,
-                onClick: () => handleDrop(cIndex)
-              }]
-            )
-          )
-        ],
-        ["div", { className: "controls" },
-          ["button", { onClick: handleUndo, disabled: history.length === 0 }, "Rückgängig"],
-          ["button", { onClick: handleReset }, "Neues Spiel"],
-          ["a", { href: "https://github.com/qisthecod/wbe-vier-gewinnt-/blob/main/README.md", target: "_blank", rel: "noopener noreferrer" }, "Dokumentation"]
-        ]
+        statusElement,
+        boardElement,
+        controlsElement
       ];
     });
 
