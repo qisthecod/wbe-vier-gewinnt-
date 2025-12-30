@@ -7,22 +7,7 @@
   <script src="lib/react/react.development.js"></script>
   <script src="lib/react/react-dom.development.js"></script>
   <script src="lib/sjdon/sjdon.js"></script>
-  <style>
-    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f0f0f0; }
-    h1 { color: #333; }
-    .board { display: grid; grid-template-columns: repeat(7, 60px); gap: 10px; background-color: #0055bb; padding: 15px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-    .cell { width: 60px; height: 60px; background-color: white; border-radius: 50%; cursor: pointer; transition: background-color 0.3s; }
-    .cell:hover { background-color: #e0e0e0; }
-    .cell.Red { background-color: #ff4136; }
-    .cell.Yellow { background-color: #ffdc00; }
-    .controls { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
-    .status { margin-bottom: 15px; font-size: 1.5em; font-weight: bold; color: #333; }
-    button { padding: 10px 20px; font-size: 1em; cursor: pointer; background-color: #0074d9; color: white; border: none; border-radius: 5px; }
-    button:disabled { background-color: #aaa; cursor: not-allowed; }
-    button:hover:not(:disabled) { background-color: #0056b3; }
-    a { text-decoration: none; color: #0074d9; font-weight: bold; }
-    a:hover { text-decoration: underline; }
-  </style>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
   <div id="root"></div>
@@ -155,15 +140,15 @@
             row.map((cell, cIndex) =>
               ["div", {
                 className: `cell ${cell || ''}`,
-                onclick: () => handleDrop(cIndex)
+                onClick: () => handleDrop(cIndex)
               }]
             )
           )
         ],
         ["div", { className: "controls" },
-          ["button", { onclick: handleUndo, disabled: history.length === 0 }, "Rückgängig"],
-          ["button", { onclick: handleReset }, "Neues Spiel"],
-          ["a", { href: "README.md", target: "_blank" }, "Dokumentation"]
+          ["button", { onClick: handleUndo, disabled: history.length === 0 }, "Rückgängig"],
+          ["button", { onClick: handleReset }, "Neues Spiel"],
+          ["a", { href: "https://github.com/qisthecod/wbe-vier-gewinnt-/blob/main/README.md", target: "_blank", rel: "noopener noreferrer" }, "Dokumentation"]
         ]
       ];
     });
