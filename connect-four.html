@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Vier Gewinnt</title>
+  <script src="lib/react/react.development.js"></script>
+  <script src="lib/react/react-dom.development.js"></script>
+  <script src="lib/sjdon/sjdon.js"></script>
+  <style>
+    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f0f0f0; }
+    h1 { color: #333; }
+    .board { display: grid; grid-template-columns: repeat(7, 60px); gap: 10px; background-color: #0055bb; padding: 15px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .cell { width: 60px; height: 60px; background-color: white; border-radius: 50%; cursor: pointer; transition: background-color 0.3s; }
+    .cell:hover { background-color: #e0e0e0; }
+    .cell.Red { background-color: #ff4136; }
+    .cell.Yellow { background-color: #ffdc00; }
+    .controls { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
+    .status { margin-bottom: 15px; font-size: 1.5em; font-weight: bold; color: #333; }
+    button { padding: 10px 20px; font-size: 1em; cursor: pointer; background-color: #0074d9; color: white; border: none; border-radius: 5px; }
+    button:disabled { background-color: #aaa; cursor: not-allowed; }
+    button:hover:not(:disabled) { background-color: #0056b3; }
+    a { text-decoration: none; color: #0074d9; font-weight: bold; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const { useState, useEffect } = React;
+
+    const ROWS = 6;
+    const COLS = 7;
+    const PLAYER_1 = 'Red';
+    const PLAYER_2 = 'Yellow';
+
+    function checkWinner(board) {
+      // Check horizontal
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS - 3; c++) {
+          if (board[r][c] && board[r][c] === board[r][c+1] && board[r][c] === board[r][c+2] && board[r][c] === board[r][c+3]) {
+            return board[r][c];
+          }
+        }
+      }
+      // Check vertical
+      for (let r = 0; r < ROWS - 3; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (board[r][c] && board[r][c] === board[r+1][c] && board[r][c] === board[r+2][c] && board[r][c] === board[r+3][c]) {
+            return board[r][c];
+          }
+        }
+      }
+      // Check diagonal /
+      for (let r = 3; r < ROWS; r++) {
+        for (let c = 0; c < COLS - 3; c++) {
+          if (board[r][c] && board[r][c] === board[r-1][c+1] && board[r][c] === board[r-2][c+2] && board[r][c] === board[r-3][c+3]) {
+            return board[r][c];
+          }
+        }
+      }
+      // Check diagonal \
+      for (let r = 0; r < ROWS - 3; r++) {
+        for (let c = 0; c < COLS - 3; c++) {
+          if (board[r][c] && board[r][c] === board[r+1][c+1] && board[r][c] === board[r+2][c+2] && board[r][c] === board[r+3][c+3]) {
+            return board[r][c];
+          }
+        }
+      }
+      return null;
+    }
+
+    const App = sjdon(() => {
+      const [board, setBoard] = useState(Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
+      const [currentPlayer, setCurrentPlayer] = useState(PLAYER_1);
+      const [winner, setWinner] = useState(null);
+      const [history, setHistory] = useState([]);
+
+      // Load state
+      useEffect(() => {
+        const saved = localStorage.getItem('connectFour');
+        if (saved) {
+          try {
+            const state = JSON.parse(saved);
+            setBoard(state.board);
+            setCurrentPlayer(state.currentPlayer);
+            setWinner(state.winner);
+            setHistory(state.history || []);
+          } catch (e) {
+            console.error("Failed to load state", e);
+          }
+        }
+      }, []);
+
+      // Save state
+      useEffect(() => {
+        localStorage.setItem('connectFour', JSON.stringify({ board, currentPlayer, winner, history }));
+      }, [board, currentPlayer, winner, history]);
+
+      const handleDrop = (colIndex) => {
+        if (winner) return;
+
+        // Find the lowest empty row in the column
+        let rowIndex = -1;
+        for (let r = ROWS - 1; r >= 0; r--) {
+          if (!board[r][colIndex]) {
+            rowIndex = r;
+            break;
+          }
+        }
+
+        if (rowIndex === -1) return; // Column full
+
+        const newBoard = board.map(row => [...row]);
+        newBoard[rowIndex][colIndex] = currentPlayer;
+
+        // Save history
+        setHistory([...history, { board, currentPlayer, winner }]);
+
+        setBoard(newBoard);
+
+        const win = checkWinner(newBoard);
+        if (win) {
+          setWinner(win);
+        } else {
+          setCurrentPlayer(currentPlayer === PLAYER_1 ? PLAYER_2 : PLAYER_1);
+        }
+      };
+
+      const handleUndo = () => {
+        if (history.length === 0) return;
+        const previous = history[history.length - 1];
+        setBoard(previous.board);
+        setCurrentPlayer(previous.currentPlayer);
+        setWinner(previous.winner);
+        setHistory(history.slice(0, -1));
+      };
+
+      const handleReset = () => {
+        setBoard(Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
+        setCurrentPlayer(PLAYER_1);
+        setWinner(null);
+        setHistory([]);
+        localStorage.removeItem('connectFour');
+      };
+
+      return [
+        "div",
+        ["h1", "Vier Gewinnt"],
+        ["div", { className: "status" },
+          winner ? `Gewinner: ${winner}!` : `Spieler am Zug: ${currentPlayer === 'Red' ? 'Rot' : 'Gelb'}`
+        ],
+        ["div", { className: "board" },
+          ...board.flatMap((row, rIndex) =>
+            row.map((cell, cIndex) =>
+              ["div", {
+                className: `cell ${cell || ''}`,
+                onclick: () => handleDrop(cIndex)
+              }]
+            )
+          )
+        ],
+        ["div", { className: "controls" },
+          ["button", { onclick: handleUndo, disabled: history.length === 0 }, "Rückgängig"],
+          ["button", { onclick: handleReset }, "Neues Spiel"],
+          ["a", { href: "README.md", target: "_blank" }, "Dokumentation"]
+        ]
+      ];
+    });
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(parseSJDON([App]));
+  </script>
+</body>
+</html>
